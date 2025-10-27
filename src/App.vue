@@ -408,6 +408,23 @@ const VENDOR_ALIASES = {
   AP_1v8: 'AP Memory (1.8 V)',
 };
 
+const USB_VENDOR_NAMES = {
+  0x303a: 'Espressif',
+  0x1a86: 'WCH (CH34x)',
+  0x10c4: 'Silicon Labs (CP210x)',
+  0x0403: 'FTDI',
+};
+
+const USB_PRODUCT_NAMES = {
+  '1A86:55D3': 'CH343 Bridge',
+  '1A86:7523': 'CH340 USB-Serial',
+  '303A:1001': 'USB JTAG/Serial',
+  '303A:4001': 'ESP32-S3 DevKit',
+  '303A:4002': 'USB JTAG/Serial (CDC)',
+  '10C4:EA60': 'CP210x USB-Serial',
+  '0403:6001': 'FT232R USB UART',
+};
+
 const PACKAGE_FORM_FACTORS = {
   QFN56: '56-pin QFN (7 mm × 7 mm)',
   QFN32: '32-pin QFN (5 mm × 5 mm)',
@@ -428,6 +445,9 @@ const FACT_ICONS = {
   'Flash Manufacturer': 'mdi-domain',
   'Flash Device': 'mdi-chip',
   'Package Form Factor': 'mdi-package-variant-closed',
+  'USB Bridge': 'mdi-usb-port',
+  'Connection Baud': 'mdi-speedometer',
+  'eFuse Block Version': 'mdi-shield-key',
 };
 
 function formatBytes(bytes) {
@@ -455,6 +475,30 @@ function humanizeFeature(feature) {
     text = text.replace(new RegExp(code, 'g'), friendly);
   }
   return text;
+}
+
+function formatUsbBridge(info) {
+  if (!info || typeof info.usbVendorId !== 'number') return null;
+  const vendorHex = `0x${info.usbVendorId.toString(16).padStart(4, '0').toUpperCase()}`;
+  const productHex =
+    typeof info.usbProductId === 'number'
+      ? `0x${info.usbProductId.toString(16).padStart(4, '0').toUpperCase()}`
+      : null;
+  const vendorName = USB_VENDOR_NAMES[info.usbVendorId] ?? `Vendor ${vendorHex}`;
+  const productKey =
+    typeof info.usbProductId === 'number'
+      ? `${info.usbVendorId.toString(16).toUpperCase()}:${info.usbProductId
+          .toString(16)
+          .toUpperCase()}`
+      : null;
+  const productName = productKey ? USB_PRODUCT_NAMES[productKey] : null;
+  if (productName && productHex) {
+    return `${vendorName} — ${productName} (${productHex})`;
+  }
+  if (productHex) {
+    return `${vendorName} (${productHex})`;
+  }
+  return vendorName;
 }
 
 function resolvePackageLabel(chipKey, pkgVersion, chipRevision) {
@@ -646,6 +690,7 @@ async function connect() {
     showBootDialog.value = false;
     currentPort.value = await navigator.serial.requestPort({ filters: SUPPORTED_VENDORS });
     const baudrate = Number.parseInt(selectedBaud.value, 10) || DEFAULT_ROM_BAUD;
+    const portDetails = currentPort.value?.getInfo ? currentPort.value.getInfo() : null;
     transport.value = new Transport(currentPort.value, DEBUG_SERIAL);
     transport.value.tracing = DEBUG_SERIAL;
     loader.value = new ESPLoader({
@@ -685,6 +730,8 @@ async function connect() {
     const psramVendor = await callChip('getPsramVendor');
     const flashCap = await callChip('getFlashCap');
     const psramCap = await callChip('getPsramCap');
+    const blockVersionMajor = await callChip('getBlkVersionMajor');
+    const blockVersionMinor = await callChip('getBlkVersionMinor');
 
     const flashId = await loader.value.readFlashId().catch(() => undefined);
 
@@ -765,6 +812,21 @@ async function connect() {
         pushFact('Flash Device', deviceHex);
       }
     }
+
+    if (
+      typeof blockVersionMajor === 'number' &&
+      !Number.isNaN(blockVersionMajor) &&
+      typeof blockVersionMinor === 'number' &&
+      !Number.isNaN(blockVersionMinor)
+    ) {
+      pushFact('eFuse Block Version', `v${blockVersionMajor}.${blockVersionMinor}`);
+    }
+
+    if (portDetails) {
+      pushFact('USB Bridge', formatUsbBridge(portDetails));
+    }
+
+    pushFact('Connection Baud', `${baudrate.toLocaleString()} bps`);
 
     const featuresDisplay = featureList.filter(Boolean).map(humanizeFeature);
 

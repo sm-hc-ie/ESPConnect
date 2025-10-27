@@ -7,6 +7,7 @@ A browser-based flasher built with Vite and [esptool-js](https://github.com/espr
 - Vue 3 + Vuetify interface for connecting, configuring, and flashing ESP targets.
 - Automatic chip summary (flash size, MAC, features) once connected.
 - Translates package/revision codes and embedded flash/PSRAM capacities into friendly labels.
+- Detects USB bridge VID/PID and eFuse block version automatically.
 - Recommended flash-offset presets for common ESP-IDF/Arduino layouts.
 - Detects ESP32-class chips via Web Serial and runs the esptool handshake in the browser.
 - Displays chip metadata (type, flash info) and streaming logs from the bootloader.
