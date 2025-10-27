@@ -719,16 +719,56 @@ function toggleTheme() {
   currentTheme.value = isDarkTheme.value ? 'light' : 'dark';
 }
 
+const partitionColorOverrides = {
+  factory: '#f8b26a',
+  ota_0: '#7cc576',
+  ota_1: '#58a55b',
+  ota_2: '#499550',
+  ota: '#8d6be6',
+  otadata: '#8d6be6',
+  nvs: '#4dd0e1',
+  fat: '#7986cb',
+  ffat: '#7986cb',
+  spiffs: '#64b5f6',
+  littlefs: '#81d4fa',
+  coredump: '#ef9a9a',
+  phy: '#aed581',
+  phy_init: '#aed581',
+  test: '#f48fb1',
+};
+
+const partitionTypeColors = {
+  0x00: '#4caf50',
+  0x01: '#2196f3',
+};
+
+const partitionPalette = [
+  '#ffadad',
+  '#ffd6a5',
+  '#fdffb6',
+  '#caffbf',
+  '#9bf6ff',
+  '#a0c4ff',
+  '#bdb2ff',
+  '#ffc6ff',
+];
+
 const partitionSegments = computed(() => {
   if (!partitionTable.value.length) return [];
   const total = partitionTable.value.reduce((sum, entry) => sum + entry.size, 0) || 1;
-  const palette = ['#3b82f6', '#22d3ee', '#f59e0b', '#10b981', '#ef4444', '#a855f7', '#14b8a6'];
   return partitionTable.value.map((entry, index) => {
     const widthPercent = Math.max(2, (entry.size / total) * 100);
+    const normalizedLabel = (entry.label || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    const colorOverride = normalizedLabel ? partitionColorOverrides[normalizedLabel] : undefined;
+    const color = colorOverride || partitionTypeColors[entry.type] || partitionPalette[index % partitionPalette.length];
     return {
       ...entry,
       width: `${widthPercent}%`,
-      color: palette[index % palette.length],
+      color,
       sizeText: formatBytes(entry.size) ?? `${entry.size} bytes`,
       offsetHex: `0x${entry.offset.toString(16).toUpperCase()}`,
       typeHex: `0x${entry.type.toString(16).toUpperCase()}`,
