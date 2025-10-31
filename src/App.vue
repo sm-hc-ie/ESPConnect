@@ -761,6 +761,7 @@ watch(selectedBaud, async (value, oldValue) => {
   try {
     baudChangeBusy.value = true;
     appendLog('Changing baud to ' + parsed.toLocaleString() + ' bps...', '[debug]');
+    loader.value.baudrate = parsed;
     await loader.value.changeBaud(parsed);
     currentBaud.value = parsed;
     if (transport.value) {
