@@ -381,6 +381,37 @@
       </v-alert>
     </v-card-text>
   </v-card>
+  <v-card class="tools-card mt-6" variant="tonal">
+    <v-card-title class="tools-card__title">
+      <v-icon size="18" class="me-2">mdi-folder-wrench</v-icon>
+      SPIFFS Agent (ESP32-S3)
+    </v-card-title>
+    <v-card-text class="tools-card__body">
+      <div class="spiffs-agent__status">{{ spiffsAgentSummary }}</div>
+      <div class="tools-card__actions">
+        <v-btn
+          color="primary"
+          variant="tonal"
+          :loading="spiffsAgentLoading"
+          :disabled="busy || maintenanceBusy || spiffsAgentLoading"
+          @click="emit('load-spiffs-agent')"
+        >
+          <v-icon start>mdi-download</v-icon>
+          Load Stub
+        </v-btn>
+      </div>
+      <v-alert
+        v-if="spiffsAgentLoaded && !spiffsAgentLoading"
+        type="info"
+        variant="tonal"
+        border="start"
+        density="comfortable"
+        class="mt-3"
+      >
+        Stub binary is cached in the browser. Future integration can now upload it to the device.
+      </v-alert>
+    </v-card-text>
+  </v-card>
   <v-dialog
     :model-value="flashProgressDialog.visible"
     persistent
@@ -576,6 +607,10 @@ const props = defineProps({
     type: [String, Number],
     default: null,
   },
+  spiffsAgentStatus: {
+    type: Object,
+    default: () => ({ loading: false, loaded: false, size: 0, error: null }),
+  },
   downloadProgress: {
     type: Object,
     default: () => ({ visible: false, value: 0, label: '' }),
@@ -608,6 +643,7 @@ const emit = defineEmits([
   'cancel-download',
   'select-register',
   'update:integrityPartition',
+  'load-spiffs-agent',
 ]);
 
 function handlePresetChange(value) {
@@ -618,6 +654,18 @@ function handlePresetChange(value) {
 const selectedRegisterAddress = ref(null);
 const selectedRegisterInfo = ref(null);
 const integrityPartition = computed(() => props.integrityPartition ?? null);
+const spiffsAgentLoading = computed(() => Boolean(props.spiffsAgentStatus?.loading));
+const spiffsAgentLoaded = computed(() => Boolean(props.spiffsAgentStatus?.loaded));
+const spiffsAgentSummary = computed(() => {
+  const status = props.spiffsAgentStatus || {};
+  if (status.loading) return 'Loading stub…';
+  if (status.error) return `Error: ${status.error}`;
+  if (status.loaded) {
+    const size = status.size ? status.size.toLocaleString() : 'unknown';
+    return `Loaded (${size} bytes). Ready for upload.`;
+  }
+  return 'Stub not loaded yet.';
+});
 
 function handleIntegrityPartitionSelect(value) {
   emit('update:integrityPartition', value);
@@ -778,5 +826,10 @@ function handleRegisterSelect(value) {
   font-size: 0.85rem;
   color: color-mix(in srgb, var(--v-theme-on-surface) 70%, transparent);
   margin-top: -4px;
+}
+
+.spiffs-agent__status {
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 80%, transparent);
 }
 </style>

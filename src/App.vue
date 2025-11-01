@@ -190,6 +190,7 @@
                 :partition-options="partitionDownloadOptions"
                 :selected-partition="selectedPartitionDownload"
                 :integrity-partition="integrityPartition"
+                :spiffs-agent-status="spiffsAgent"
                 :download-progress="downloadProgress"
                 @firmware-input="handleFirmwareInput"
                 @flash="flashFirmware"
@@ -205,6 +206,7 @@
                 @update:flash-read-length="value => (flashReadLength.value = value)"
                 @update:selected-partition="handleSelectPartition"
                 @update:integrity-partition="handleSelectIntegrityPartition"
+                @load-spiffs-agent="handleLoadSpiffsAgent"
                 @download-flash="handleDownloadFlash"
                 @download-partition="handleDownloadPartition"
                 @download-all-partitions="handleDownloadAllPartitions"
@@ -790,6 +792,13 @@ const flashReadOffset = ref('0x0');
 const flashReadLength = ref('');
 const flashReadStatus = ref(null);
 const flashReadStatusType = ref('info');
+const spiffsAgent = reactive({
+  loading: false,
+  loaded: false,
+  size: 0,
+  error: null,
+  binary: null,
+});
 const logBuffer = ref('');
 const monitorText = ref('');
 const monitorActive = ref(false);
@@ -2642,6 +2651,38 @@ function handleSelectIntegrityPartition(value) {
     md5StatusType.value = 'warning';
     md5Status.value = 'Selected partition is unavailable.';
     md5Result.value = null;
+  }
+}
+
+async function handleLoadSpiffsAgent() {
+  if (spiffsAgent.loading) {
+    return;
+  }
+  spiffsAgent.loading = true;
+  spiffsAgent.error = null;
+  try {
+    if (spiffsAgent.loaded && spiffsAgent.binary) {
+      appendLog(`SPIFFS agent stub already loaded (${spiffsAgent.size.toLocaleString()} bytes).`, '[debug]');
+      return;
+    }
+    const response = await fetch('/stubs/spiffs_agent_esp32s3.bin', { cache: 'no-cache' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const buffer = await response.arrayBuffer();
+    const binary = new Uint8Array(buffer);
+    if (!binary.length) {
+      throw new Error('Stub file is empty.');
+    }
+    spiffsAgent.binary = binary;
+    spiffsAgent.size = binary.length;
+    spiffsAgent.loaded = true;
+    appendLog(`SPIFFS agent stub loaded (${spiffsAgent.size.toLocaleString()} bytes).`, '[debug]');
+  } catch (error) {
+    spiffsAgent.error = error?.message || String(error);
+    appendLog(`SPIFFS agent load failed: ${spiffsAgent.error}`, '[warn]');
+  } finally {
+    spiffsAgent.loading = false;
   }
 }
 
