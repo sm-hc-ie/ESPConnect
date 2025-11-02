@@ -25,6 +25,24 @@
           <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
       </v-list>
+      <v-divider class="app-drawer__divider" />
+      <v-list density="comfortable" class="app-drawer__list">
+        <v-list-subheader class="app-drawer__label text-overline text-medium-emphasis">
+          Resources
+        </v-list-subheader>
+        <v-list-item
+          v-for="link in resourceLinks"
+          :key="link.href"
+          :href="link.href"
+          :prepend-icon="link.icon"
+          target="_blank"
+          rel="noopener"
+          class="app-drawer__list-item"
+          rounded="lg"
+        >
+          <v-list-item-title>{{ link.title }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
     </v-navigation-drawer>
     <v-main>
       <v-container class="py-10" max-width="1100">
@@ -75,44 +93,6 @@
           />
         </div>
         <v-spacer />
-        <div class="status-links">
-          <v-btn
-            class="status-link"
-            color="surface"
-            variant="text"
-            density="comfortable"
-            href="https://www.youtube.com/channel/UCnnU_HGvTr8ewpqvHe2llDw"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-icon start>mdi-youtube</v-icon>
-            Tutorial
-          </v-btn>
-          <v-btn
-            class="status-link"
-            color="surface"
-            variant="text"
-            density="comfortable"
-            href="https://buymeacoffee.com/thelastoutpostworkshop"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-icon start>mdi-coffee</v-icon>
-            Buy Me a Coffee
-          </v-btn>
-          <v-btn
-            class="status-link"
-            color="surface"
-            variant="text"
-            density="comfortable"
-            href="https://github.com/thelastoutpostworkshop/ESP32PartitionBuilder"
-            target="_blank"
-            rel="noopener"
-          >
-            <v-icon start>mdi-lifebuoy</v-icon>
-            Get Help
-          </v-btn>
-        </div>
         <v-btn
           :title="`Switch to ${isDarkTheme ? 'light' : 'dark'} theme`"
           variant="text"
@@ -914,6 +894,23 @@ const navigationItems = [
   { title: 'Firmware Tools', value: 'flash', icon: 'mdi-chip' },
   { title: 'Serial Monitor', value: 'console', icon: 'mdi-console-line' },
   { title: 'Session Log', value: 'log', icon: 'mdi-clipboard-text-outline' },
+];
+const resourceLinks = [
+  {
+    title: 'Tutorial',
+    href: 'https://www.youtube.com/channel/UCnnU_HGvTr8ewpqvHe2llDw',
+    icon: 'mdi-youtube',
+  },
+  {
+    title: 'Buy Me a Coffee',
+    href: 'https://buymeacoffee.com/thelastoutpostworkshop',
+    icon: 'mdi-coffee',
+  },
+  {
+    title: 'Get Help',
+    href: 'https://github.com/thelastoutpostworkshop/ESP32PartitionBuilder',
+    icon: 'mdi-lifebuoy',
+  },
 ];
 const flashSizeBytes = ref(null);
 
@@ -3511,17 +3508,6 @@ onBeforeUnmount(() => {
   gap: 16px;
 }
 
-.status-links {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.status-link {
-  text-transform: none;
-}
-
 .status-button {
   min-width: 140px;
   border-width: 2px;
@@ -3576,6 +3562,10 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.app-drawer__divider {
+  opacity: 0.1;
 }
 
 .app-drawer__label {
