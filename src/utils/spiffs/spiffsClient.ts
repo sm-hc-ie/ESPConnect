@@ -17,6 +17,12 @@ export interface SpiffsEntry {
   type: 'file' | 'dir';
 }
 
+export interface SpiffsUsage {
+  capacityBytes: number;
+  usedBytes: number;
+  freeBytes: number;
+}
+
 export interface SpiffsClient {
   list(): Promise<SpiffsEntry[]>;
   read(name: string): Promise<Uint8Array>;
@@ -35,13 +41,17 @@ export class InMemorySpiffsClient implements SpiffsClient {
   private readonly files = new Map<string, VirtualEntry>();
   private readonly config: NormalizedConfig;
   private readonly imageSize: number;
+  private readonly layout: SpiffsLayout;
+  private usage: SpiffsUsage = { capacityBytes: 0, usedBytes: 0, freeBytes: 0 };
 
   private constructor(initialFiles: Map<string, VirtualEntry>, config: SpiffsConfig, imageSize: number) {
     this.config = normalizeConfig(config);
     this.imageSize = imageSize;
+    this.layout = new SpiffsLayout(this.config, imageSize);
     initialFiles.forEach((entry, name) => {
       this.files.set(name, { type: entry.type, data: entry.data.slice() });
     });
+    this.recalculateUsage();
   }
 
   public static async fromImage(
@@ -86,17 +96,21 @@ export class InMemorySpiffsClient implements SpiffsClient {
     if (trimmed.length > this.config.objNameLength - 1) {
       throw new Error(`File name too long (max ${this.config.objNameLength - 1} chars)`);
     }
+    this.ensureCapacityFor(trimmed, data.byteLength);
     this.files.set(trimmed, { type: 'file', data: new Uint8Array(data) });
+    this.recalculateUsage();
   }
 
   public async remove(name: string): Promise<void> {
     if (!this.files.delete(name)) {
       throw new Error(`Cannot remove missing file: ${name}`);
     }
+    this.recalculateUsage();
   }
 
   public async format(): Promise<void> {
     this.files.clear();
+    this.recalculateUsage();
   }
 
   public async toImage(): Promise<Uint8Array> {
@@ -106,6 +120,72 @@ export class InMemorySpiffsClient implements SpiffsClient {
       data: entry.data,
     }));
     return encoder.encode(files);
+  }
+
+  public getUsage(): SpiffsUsage {
+    return { ...this.usage };
+  }
+
+  private ensureCapacityFor(name: string, dataLength: number): void {
+    const requiredPages = this.calculateRequiredPagesWith(name, dataLength);
+    if (requiredPages <= this.layout.totalDataPages) {
+      return;
+    }
+    const capacityBytes = this.layout.totalDataPages * this.config.pageSize;
+    const requiredBytes = requiredPages * this.config.pageSize;
+    const deficit = requiredBytes - capacityBytes;
+    const freeBytes = this.usage.freeBytes;
+    throw new Error(
+      `Not enough SPIFFS space for ${name} (needs ${formatByteSize(
+        deficit > 0 ? deficit : requiredBytes,
+      )}, free ${formatByteSize(freeBytes)}).`,
+    );
+  }
+
+  private calculateRequiredPagesWith(name: string, dataLength: number): number {
+    let pages = 0;
+    let replaced = false;
+    for (const [entryName, entry] of this.files.entries()) {
+      if (entryName === name) {
+        pages += this.pagesForSize(dataLength);
+        replaced = true;
+      } else {
+        pages += this.pagesForSize(entry.data.byteLength);
+      }
+    }
+    if (!replaced) {
+      pages += this.pagesForSize(dataLength);
+    }
+    return pages;
+  }
+
+  private calculateRequiredPagesForCurrent(): number {
+    let pages = 0;
+    for (const entry of this.files.values()) {
+      pages += this.pagesForSize(entry.data.byteLength);
+    }
+    return pages;
+  }
+
+  private pagesForSize(size: number): number {
+    const dataPages = this.layout.dataPagesForSize(size);
+    const extraEntries = Math.max(0, dataPages - this.layout.headerIndexCapacity);
+    const extraIndexPages =
+      extraEntries === 0 ? 0 : Math.ceil(extraEntries / this.layout.indexPageCapacity);
+    return dataPages + 1 + extraIndexPages;
+  }
+
+  private recalculateUsage(): void {
+    const requiredPages = this.calculateRequiredPagesForCurrent();
+    const capacityPages = this.layout.totalDataPages;
+    const usedPages = Math.min(requiredPages, capacityPages);
+    const capacityBytes = capacityPages * this.config.pageSize;
+    const usedBytes = Math.min(usedPages * this.config.pageSize, capacityBytes);
+    this.usage = {
+      capacityBytes,
+      usedBytes,
+      freeBytes: Math.max(0, capacityBytes - usedBytes),
+    };
   }
 }
 
@@ -160,7 +240,7 @@ class SpiffsImageEncoder {
   private ensureCapacity(files: EncoderFile[]): void {
     let requiredPages = 0;
     for (const file of files) {
-      const dataPages = this.requiredDataPages(file.data.byteLength);
+      const dataPages = this.layout.dataPagesForSize(file.data.byteLength);
       const extraEntries = Math.max(0, dataPages - this.layout.headerIndexCapacity);
       const extraIndexPages =
         extraEntries === 0 ? 0 : Math.ceil(extraEntries / this.layout.indexPageCapacity);
@@ -284,13 +364,6 @@ class SpiffsImageEncoder {
     }
   }
 
-  private requiredDataPages(size: number): number {
-    if (size === 0) {
-      return 1;
-    }
-    return Math.ceil(size / this.layout.dataPayloadSize);
-  }
-
   private flushLookupPages(): void {
     for (let block = 0; block < this.layout.blockCount; block += 1) {
       for (let entry = 0; entry < this.layout.dataPagesPerBlock; entry += 1) {
@@ -402,9 +475,30 @@ class SpiffsLayout {
     const offsetInBlock = dataSlot % this.dataPagesPerBlock;
     return block * this.pagesPerBlock + this.lookupPagesPerBlock + offsetInBlock;
   }
+
+  public dataPagesForSize(size: number): number {
+    if (size === 0) {
+      return 1;
+    }
+    return Math.ceil(size / this.dataPayloadSize);
+  }
 }
 
 function alignmentPadding(size: number, alignment: number): number {
   const remainder = size % alignment;
   return remainder === 0 ? 0 : alignment - remainder;
+}
+
+function formatByteSize(bytes: number): string {
+  if (!Number.isFinite(bytes)) {
+    return '0 B';
+  }
+  const abs = Math.abs(bytes);
+  if (abs < 1024) {
+    return `${bytes} B`;
+  }
+  if (abs < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }

@@ -111,6 +111,16 @@
         </v-chip>
       </v-card-title>
       <v-card-text>
+        <div v-if="usage?.capacityBytes" class="spiffs-usage">
+          <div class="spiffs-usage__labels">
+            <span>Used {{ formatSize(usage.usedBytes) }} / {{ formatSize(usage.capacityBytes) }}</span>
+            <span>{{ usagePercent }}%</span>
+          </div>
+          <v-progress-linear :model-value="usagePercent" height="8" rounded color="primary" />
+          <div class="text-caption text-medium-emphasis">
+            Free {{ formatSize(usage.freeBytes) }}
+          </div>
+        </div>
         <div class="upload-row">
           <v-file-input
             v-model="uploadFile"
@@ -201,7 +211,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
   partitions: {
@@ -236,6 +246,14 @@ const props = defineProps({
   },
   hasPartition: Boolean,
   hasClient: Boolean,
+  usage: {
+    type: Object,
+    default: () => ({
+      capacityBytes: 0,
+      usedBytes: 0,
+      freeBytes: 0,
+    }),
+  },
 });
 
 const emit = defineEmits([
@@ -252,6 +270,16 @@ const emit = defineEmits([
 
 const uploadFile = ref(null);
 const restoreInput = ref(null);
+const usagePercent = computed(() => {
+  if (!props.usage || !props.usage.capacityBytes) {
+    return 0;
+  }
+  const ratio = props.usage.usedBytes / props.usage.capacityBytes;
+  if (!Number.isFinite(ratio) || ratio < 0) {
+    return 0;
+  }
+  return Math.min(100, Math.round(ratio * 100));
+});
 
 function submitUpload() {
   if (!uploadFile.value) return;
@@ -306,6 +334,21 @@ function formatSize(size) {
   .upload-row__cta {
     align-self: center;
   }
+}
+
+.spiffs-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.spiffs-usage__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: rgb(var(--v-theme-on-surface));
+  opacity: 0.7;
 }
 
 .spiffs-table code {

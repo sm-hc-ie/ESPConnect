@@ -83,6 +83,7 @@
                 :read-only-reason="spiffsState.readOnlyReason" :dirty="spiffsState.dirty"
                 :backup-done="spiffsState.backupDone" :error="spiffsState.error"
                 :has-partition="hasSpiffsPartitionSelected" :has-client="Boolean(spiffsState.client)"
+                :usage="spiffsState.usage"
                 @select-partition="handleSelectSpiffsPartition" @refresh="handleRefreshSpiffs"
                 @backup="handleSpiffsBackup" @restore="handleSpiffsRestore" @download-file="handleSpiffsDownloadFile"
                 @upload-file="handleSpiffsUpload" @delete-file="handleSpiffsDelete" @format="handleSpiffsFormat"
@@ -658,6 +659,7 @@ function saveBinaryFile(name, data) {
 }
 
 function resetSpiffsState() {
+  spiffsState.selectedId = null;
   spiffsState.client = null;
   spiffsState.files = [];
   spiffsState.status = 'Load a SPIFFS partition to begin.';
@@ -671,6 +673,23 @@ function resetSpiffsState() {
   spiffsState.backupDone = false;
   spiffsState.diagnostics = [];
   spiffsState.baselineFiles = [];
+  spiffsState.usage = {
+    capacityBytes: 0,
+    usedBytes: 0,
+    freeBytes: 0,
+  };
+}
+
+function updateSpiffsUsage() {
+  if (spiffsState.client && typeof spiffsState.client.getUsage === 'function') {
+    spiffsState.usage = spiffsState.client.getUsage();
+  } else {
+    spiffsState.usage = {
+      capacityBytes: 0,
+      usedBytes: 0,
+      freeBytes: 0,
+    };
+  }
 }
 
 async function ensureSpiffsReady(options = {}) {
@@ -715,12 +734,13 @@ async function loadSpiffsPartition(partition) {
       spiffsState.error = formatErrorMessage(error);
       spiffsState.readOnly = true;
       spiffsState.readOnlyReason = 'SPIFFS image unreadable (possibly encrypted).';
-    spiffsState.status = 'SPIFFS is read-only.';
-    spiffsState.client = null;
-    spiffsState.files = [];
-    spiffsState.baselineFiles = [];
-    return;
-  }
+      spiffsState.status = 'SPIFFS is read-only.';
+      spiffsState.client = null;
+      spiffsState.files = [];
+      spiffsState.baselineFiles = [];
+      updateSpiffsUsage();
+      return;
+    }
     spiffsState.client = client;
     spiffsState.files = await client.list();
     spiffsState.baselineFiles = spiffsState.files.map(file => ({
@@ -729,6 +749,7 @@ async function loadSpiffsPartition(partition) {
     }));
     spiffsState.dirty = false;
     spiffsState.backupDone = false;
+    updateSpiffsUsage();
     const count = spiffsState.files.length;
     spiffsState.status = count === 1 ? 'Loaded 1 file.' : `Loaded ${count} files.`;
     appendLog(
@@ -749,6 +770,7 @@ async function refreshSpiffsListing() {
     return;
   }
   spiffsState.files = await spiffsState.client.list();
+  updateSpiffsUsage();
 }
 
 function markSpiffsDirty(message) {
@@ -905,7 +927,7 @@ function cancelSpiffsBackup() {
   handleCancelDownload();
 }
 
-async function handleSpiffsUpload({ file, name }) {
+async function handleSpiffsUpload({ file }) {
   if (!spiffsState.client) return;
   if (spiffsState.readOnly) {
     spiffsState.status = spiffsState.readOnlyReason || 'SPIFFS is read-only.';
@@ -915,9 +937,9 @@ async function handleSpiffsUpload({ file, name }) {
     spiffsState.status = 'Select a file to upload.';
     return;
   }
-  const targetName = (name || file.name || '').trim();
+  const targetName = (file.name || '').trim();
   if (!targetName) {
-    spiffsState.status = 'Provide a filename.';
+    spiffsState.status = 'Selected file has no name. Rename it and try again.';
     return;
   }
   try {
@@ -929,6 +951,7 @@ async function handleSpiffsUpload({ file, name }) {
     appendLog(`SPIFFS staged ${targetName} (${data.length.toLocaleString()} bytes).`, '[debug]');
   } catch (error) {
     spiffsState.error = formatErrorMessage(error);
+    spiffsState.status = spiffsState.error || 'SPIFFS upload failed.';
   } finally {
     spiffsState.busy = false;
   }
@@ -1243,6 +1266,11 @@ const spiffsState = reactive({
   backupDone: false,
   diagnostics: [],
   baselineFiles: [],
+  usage: {
+    capacityBytes: 0,
+    usedBytes: 0,
+    freeBytes: 0,
+  },
 });
 const spiffsBackupDialog = reactive({
   visible: false,
