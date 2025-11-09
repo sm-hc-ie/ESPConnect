@@ -56,7 +56,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card variant="tonal">
+    <v-card :variant="dragActive ? 'outlined' : 'tonal'">
       <v-card-title class="d-flex align-center justify-space-between">
         <span>Files</span>
         <v-chip v-if="dirty" color="warning" size="small" variant="elevated">
@@ -95,8 +95,7 @@
               </div>
             </v-col>
             <v-col>
-              <div class="filesystem-dropzone" :class="{ 'filesystem-dropzone--active': dragActive }"
-                @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop">
+              <div @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop">
                 <div class="filesystem-dropzone__hint">
                   <v-icon size="32">mdi-cloud-upload-outline</v-icon>
                   <div class="filesystem-dropzone__hint-text">
@@ -657,11 +656,6 @@ function previewLabel(name) {
   transition: border-color 0.2s ease, background-color 0.2s ease;
   align-items: center;
   justify-content: center;
-}
-
-.filesystem-dropzone--active {
-  border-color: color-mix(in srgb, var(--v-theme-primary) 60%, transparent);
-  background-color: color-mix(in srgb, var(--v-theme-primary) 10%, transparent);
 }
 
 .filesystem-dropzone__overlay {
