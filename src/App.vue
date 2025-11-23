@@ -888,17 +888,16 @@ async function loadLittlefsModule() {
 }
 
 function resolveLittlefsModuleUrl() {
-  if (typeof window !== 'undefined' && window.location) {
-    const url = new URL(LITTLEFS_WASM_ENTRY, window.location.origin);
-    url.searchParams.set('v', LITTLEFS_MODULE_CACHE_KEY);
-    return url.toString();
-  }
-  return `${LITTLEFS_WASM_ENTRY}?v=${LITTLEFS_MODULE_CACHE_KEY}`;
+  const base = typeof window !== 'undefined' && window.location ? window.location.href : import.meta.url;
+  const url = new URL(LITTLEFS_WASM_ENTRY, base);
+  url.searchParams.set('v', LITTLEFS_MODULE_CACHE_KEY);
+  return url.toString();
 }
 
 async function loadFatfsModule() {
   if (!fatfsModulePromise) {
-    const moduleUrl = new URL(FATFS_WASM_ENTRY, typeof window !== 'undefined' ? window.location.origin : undefined);
+    const base = typeof window !== 'undefined' && window.location ? window.location.href : import.meta.url;
+    const moduleUrl = new URL(FATFS_WASM_ENTRY, base);
     fatfsModulePromise = import(
       /* @vite-ignore */ moduleUrl.toString()
     ).catch(error => {
@@ -3516,7 +3515,7 @@ watch(
 const resourceLinks = [
   {
     title: 'Tutorial',
-    href: 'https://www.youtube.com/channel/UCnnU_HGvTr8ewpqvHe2llDw',
+    href: 'https://youtu.be/-nhDKzBxHiI',
     icon: 'mdi-youtube',
   },
   {
