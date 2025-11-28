@@ -4701,6 +4701,7 @@ async function connect() {
         feature => typeof feature === 'string' && feature.toUpperCase().includes('OCTAL')
       );
 
+    const flashSizeKb = typeof flashSizeRaw === 'number' ? flashSizeRaw : null;
     let flashBytesValue = null;
     let flashLabelSuffix = '';
     if (typeof flashSizeKb === 'number' && flashSizeKb > 0) {
