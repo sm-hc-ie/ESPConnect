@@ -4794,11 +4794,7 @@ async function connect() {
         const parts = [];
         if (pwmEntry.ledcChannels) parts.push(`${pwmEntry.ledcChannels} channels`);
         if (pwmEntry.ledcTimers) parts.push(`${pwmEntry.ledcTimers} timers`);
-        if (pwmEntry.hasHighSpeedMode) parts.push('high-speed');
-        if (pwmEntry.maxFreqHz1Bit) {
-          const freq = formatHertz(pwmEntry.maxFreqHz1Bit);
-          if (freq) parts.push(`up to ${freq}`);
-        }
+        if (pwmEntry.notes) parts.push(pwmEntry.notes);
         pwmLabel = parts.join(' · ');
       }
       pushFact('PWM/LEDC', pwmLabel);

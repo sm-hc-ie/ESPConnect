@@ -77,21 +77,38 @@
               <v-col v-for="group in details.factGroups" :key="group.title" cols="12" md="6" class="">
                 <v-card elevation="0" variant="tonal" class="detail-card">
                   <v-card-title>
-                    <v-icon class="me-2">{{ group.icon }}</v-icon>
-                    {{ group.title }}
-                  </v-card-title>
-                  <v-divider class="detail-card__divider" />
-                  <v-card-text>
-                    <div v-for="fact in group.items" :key="fact.label" class="detail-card__item">
-                      <div class="detail-card__item-label">
-                        <v-icon v-if="fact.icon" class="me-2">{{ fact.icon }}</v-icon>
-                        <span>{{ fact.label }}</span>
-                      </div>
-                      <div class="detail-card__item-value">{{ fact.value }}</div>
+                  <v-icon class="me-2">{{ group.icon }}</v-icon>
+                  {{ group.title }}
+                </v-card-title>
+                <v-divider class="detail-card__divider" />
+                <v-card-text>
+                  <div v-for="fact in group.items" :key="fact.label" class="detail-card__item">
+                    <div class="detail-card__item-label">
+                      <v-icon v-if="fact.icon" class="me-2">{{ fact.icon }}</v-icon>
+                      <span>{{ fact.label }}</span>
                     </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
+                    <div class="detail-card__item-value">
+                      <template v-if="fact.label === 'PWM/LEDC'">
+                        <VTooltip
+                          location="top"
+                          :text="'PWM/LEDC capabilities are based on the chip family, not on live data read from the device.'"
+                        >
+                          <template #activator="{ props }">
+                            <span class="detail-card__value-with-icon" v-bind="props">
+                              <span>{{ fact.value }}</span>
+                              <v-icon size="16" class="detail-card__tooltip-icon">mdi-information-outline</v-icon>
+                            </span>
+                          </template>
+                        </VTooltip>
+                      </template>
+                      <template v-else>
+                        {{ fact.value }}
+                      </template>
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
             </v-row>
           </div>
         </v-card-text>
@@ -532,6 +549,16 @@ const featurePreview = computed(() => {
   color: color-mix(in srgb, var(--v-theme-on-surface) 98%, transparent);
   text-align: right;
   word-break: break-word;
+}
+
+.detail-card__value-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-card__tooltip-icon {
+  opacity: 0.7;
 }
 
 @media (max-width: 959px) {
