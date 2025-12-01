@@ -83,11 +83,11 @@
                 <v-divider class="detail-card__divider" />
                 <v-card-text>
                   <div v-for="fact in group.items" :key="fact.label" class="detail-card__item">
-                    <div>
+                    <div class="detail-card__item-label">
                       <v-icon v-if="fact.icon" class="me-2">{{ fact.icon }}</v-icon>
                       <span>{{ fact.label }}</span>
                     </div>
-                    <div>
+                    <div class="detail-card__item-value">
                       <template v-if="fact.label === 'PWM/LEDC'">
                         <VTooltip
                           location="top"
@@ -517,7 +517,7 @@ const featurePreview = computed(() => {
 
 .detail-card__item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: flex-start;
   gap: 10px 14px;
   padding: 12px 14px;
@@ -538,6 +538,7 @@ const featurePreview = computed(() => {
   letter-spacing: 0.01em;
   line-height: 1.3;
   flex-wrap: wrap;
+  word-break: break-word;
 }
 
 .detail-card__item-label :deep(.v-icon) {
@@ -560,6 +561,9 @@ const featurePreview = computed(() => {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+  text-align: right;
 }
 
 .detail-card__tooltip-icon {
