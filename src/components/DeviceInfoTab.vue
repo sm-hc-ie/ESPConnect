@@ -83,11 +83,11 @@
                 <v-divider class="detail-card__divider" />
                 <v-card-text>
                   <div v-for="fact in group.items" :key="fact.label" class="detail-card__item">
-                    <div class="detail-card__item-label">
+                    <div>
                       <v-icon v-if="fact.icon" class="me-2">{{ fact.icon }}</v-icon>
                       <span>{{ fact.label }}</span>
                     </div>
-                    <div class="detail-card__item-value">
+                    <div>
                       <template v-if="fact.label === 'PWM/LEDC'">
                         <VTooltip
                           location="top"
