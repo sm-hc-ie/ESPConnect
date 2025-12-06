@@ -5127,7 +5127,7 @@ async function connect() {
     }
 
     connectDialog.message = 'Handshaking with ROM bootloader...';
-    const { chipName, chip, macAddress: handshakeMac } = await esptool.connectAndHandshake();
+    const { chipName, chipFamily, macAddress: handshakeMac } = await esptool.connectAndHandshake();
     currentBaud.value = desiredBaud || connectBaud;
     transport.value.baudrate = currentBaud.value;
     const previousSuspendState = suspendBaudWatcher;
@@ -5138,13 +5138,13 @@ async function connect() {
     });
     connected.value = true;
     appendLog(`Handshake complete with ${chipName}. Collecting device details...`, '[ESPConnect-Debug]');
-    if (chip?.CHIP_NAME === 'ESP32-C6' && chip.SPI_REG_BASE === 0x60002000) {
-      chip.SPI_REG_BASE = 0x60003000;
-      appendLog(
-        'Applied ESP32-C6 SPI register base workaround (0x60002000 → 0x60003000).',
-        '[ESPConnect-Debug]'
-      );
-    }
+    // if (chip?.CHIP_NAME === 'ESP32-C6' && chip.SPI_REG_BASE === 0x60002000) {
+    //   chip.SPI_REG_BASE = 0x60003000;
+    //   appendLog(
+    //     'Applied ESP32-C6 SPI register base workaround (0x60002000 → 0x60003000).',
+    //     '[ESPConnect-Debug]'
+    //   );
+    // }
 
     lastFlashBaud.value = currentBaud.value;
 
@@ -5204,8 +5204,8 @@ async function connect() {
       typeof crystalFreq === 'number' ? `${Number(crystalFreq).toFixed(0)} MHz` : null;
     const macLabel = handshakeMac ?? "unknown";
 
-    const chipKey = chip?.CHIP_NAME || chipName;
-    applyRegisterGuide(chipKey);
+    // const chipKey = chip?.CHIP_NAME || chipName;
+    applyRegisterGuide(chipName);
     const facts = [];
     const pushFact = (label, value) => {
       if (!value) return;
@@ -5215,7 +5215,7 @@ async function connect() {
         icon: FACT_ICONS[label] ?? null,
       });
     };
-    const packageLabel = resolvePackageLabel(chipKey, packageVersion, chipRevision);
+    const packageLabel = resolvePackageLabel(chipName, packageVersion, chipRevision);
     pushFact('Chip Variant', packageLabel);
     const packageMatch = packageLabel?.match(/\(([^)]+)\)$/);
     if (packageMatch) {
@@ -5225,13 +5225,13 @@ async function connect() {
     if (macLabel && macLabel !== 'Unavailable') {
       pushFact('MAC Address', macLabel);
     }
-    pushFact('Revision', resolveRevisionLabel(chipKey, chipRevision, majorVersion, minorVersion));
+    pushFact('Revision', resolveRevisionLabel(chipName, chipRevision, majorVersion, minorVersion));
     pushFact('Flash Size', flashLabel);
 
-    const embeddedFlash = resolveEmbeddedFlash(chipKey, flashCap, flashVendor, featureList);
+    const embeddedFlash = resolveEmbeddedFlash(chipName, flashCap, flashVendor, featureList);
     pushFact('Embedded Flash', embeddedFlash);
 
-    const embeddedPsram = resolveEmbeddedPsram(chipKey, psramCap, psramVendor, featureList);
+    const embeddedPsram = resolveEmbeddedPsram(chipName, psramCap, psramVendor, featureList);
     pushFact('Embedded PSRAM', embeddedPsram);
 
     const cpuFrequency = extractCpuFrequency(featureList);
@@ -5240,7 +5240,7 @@ async function connect() {
     const coreCount = extractCoreCount(featureList);
     pushFact('CPU Cores', coreCount);
 
-    const pwmEntry = chipKey ? PWM_TABLE[chipKey] : null;
+    const pwmEntry = chipName ? PWM_TABLE[chipName] : null;
     if (pwmEntry) {
       let pwmLabel = '';
       if (pwmEntry.hasLedc === false) {
@@ -5308,7 +5308,7 @@ async function connect() {
     }
 
     connectDialog.message = `Reading partition table...`;
-    if (chip?.CHIP_NAME === 'ESP8266') {
+    if (chipName === 'ESP8266') {
       appendLog('Skipping partition table read for ESP8266 (not supported).', '[ESPConnect-Debug]');
       partitionTable.value = [];
       appMetadataLoaded.value = false;

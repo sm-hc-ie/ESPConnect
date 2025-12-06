@@ -422,19 +422,20 @@ export function createEsptoolClient({
         transport.baudrate = desiredBaud;
       }
 
-      const chipFamily =
-        typeof (loader as any).getChipFamily === 'function'
-          ? (loader as any).getChipFamily()
-          : (loader as any).chipFamily;
-      const chip = chipFamily
-        ? {
-          CHIP_NAME: chipName,
-          SPI_REG_BASE: getSpiFlashAddresses(chipFamily).regBase,
-        }
-        : { CHIP_NAME: chipName };
+      // const chipFamily =
+      //   typeof (loader as any).getChipFamily === 'function'
+      //     ? (loader as any).getChipFamily()
+      //     : (loader as any).chipFamily;
+      // const chip = chipFamily
+      //   ? {
+      //     CHIP_NAME: chipName,
+      //     SPI_REG_BASE: getSpiFlashAddresses(chipFamily).regBase,
+      //   }
+      //   : { CHIP_NAME: chipName };
+      const chipFamily = loader.getChipFamily();
 
       status('Reading chip information...');
-      return { chipName, chip, macAddress };
+      return { chipName, chipFamily, macAddress };
     } finally {
       setBusy(false);
     }
