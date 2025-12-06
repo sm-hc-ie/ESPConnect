@@ -432,7 +432,7 @@ export function createEsptoolClient({
       //     SPI_REG_BASE: getSpiFlashAddresses(chipFamily).regBase,
       //   }
       //   : { CHIP_NAME: chipName };
-      const chipFamily = loader.getChipFamily();
+      // const chipFamily = loader.getChipFamily();
 
       status('Reading chip information...');
       return { chipName, macAddress };
