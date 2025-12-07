@@ -64,7 +64,7 @@ export const FACT_GROUP_CONFIG = [
   {
     title: 'Security',
     icon: 'mdi-shield-key-outline',
-    labels: ['eFuse Block Version'],
+    labels: ['eFuse Block Version', 'Security information'],
   },
   {
     title: 'Peripherals',

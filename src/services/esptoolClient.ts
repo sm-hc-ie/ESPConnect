@@ -20,6 +20,7 @@ import {
   getSpiFlashAddresses,
   timeoutPerMb,
 } from 'tasmota-webserial-esptool/dist/const.js';
+import { formatSecuritySummary, SecurityInfo } from "./securityInfo";
 import { pack } from 'tasmota-webserial-esptool/dist/struct.js';
 import { DEBUG_SERIAL, DEFAULT_ROM_BAUD } from '../constants/usb';
 import { readEsp32S3Metadata } from './chipMetadata/esp32s3';
@@ -429,9 +430,17 @@ export function createEsptoolClient({
         transport.baudrate = desiredBaud;
       }
 
-      // const securityInfo = await loader.getSecurityInfo();
+      let securityInfo = undefined;
+      let summary = "";
+      try {
+        status('Getting security information...');
+        securityInfo = await loader.getSecurityInfo();
+        summary = formatSecuritySummary(securityInfo,chipName);
+      } catch (error) {
+        logger.error("Cannot read secutiry information");
+      }
 
-      return { chipName, macAddress };
+      return { chipName, macAddress,summary };
     } finally {
       setBusy(false);
     }
