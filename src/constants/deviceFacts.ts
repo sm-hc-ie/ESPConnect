@@ -13,6 +13,8 @@ export const FACT_ICONS: Record<string, string> = {
   'Connection Baud': 'mdi-speedometer',
   'eFuse Block Version': 'mdi-shield-key',
   'PWM/LEDC': 'mdi-waveform',
+  'CPU Cores': 'mdi-animation',
+  'Max CPU Frequency':'mdi-speedometer'
 };
 
 export const PRIMARY_FACTS = [
@@ -29,7 +31,7 @@ export const FACT_GROUP_CONFIG = [
   {
     title: 'Package & Revision',
     icon: 'mdi-chip',
-    labels: ['Chip Variant', 'Package Form Factor', 'Revision'],
+    labels: ['Chip Variant', 'Package Form Factor', 'Revision','CPU Cores','Max CPU Frequency'],
   },
   {
     title: 'Embedded Memory',
