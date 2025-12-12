@@ -5196,6 +5196,7 @@ async function connect() {
       appendLog(`Warning: unable to flush serial input before handshake (${formatErrorMessage(err)}).`, '[ESPConnect-Warn]');
     }
 
+    // Open the serial port, talk to the ROM bootloader, load the stub flasher
     connectDialog.message = 'Handshaking with ROM bootloader...';
     const { chipName, macAddress: handshakeMac, securityFacts } = await esptool.connectAndHandshake();
     currentBaud.value = desiredBaud || connectBaud_defaultROM;

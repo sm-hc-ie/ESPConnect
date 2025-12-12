@@ -403,6 +403,7 @@ export function createEsptoolClient({
 
   let client: EsptoolClient;
 
+  // Open the serial port, talk to the ROM bootloader, load the stub flasher
   async function connectAndHandshake() {
     setBusy(true);
     try {
