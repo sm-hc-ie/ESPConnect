@@ -3171,6 +3171,12 @@ type EnsureFsOptions = {
   force?: boolean;
 };
 
+type ReadFlashOptions = {
+  label?: string;
+  cancelSignal?: { value?: boolean };
+  onProgress?: (progress: WriteFilesystemProgress) => void;
+};
+
 // Write a filesystem image to flash with progress callbacks.
 async function writeFilesystemImage(partition: any, image: Uint8Array | ArrayBuffer, options: WriteFilesystemOptions = {}) {
   const { onProgress, label = 'filesystem', state, compress = true } = options;
@@ -3204,7 +3210,7 @@ const FLASH_READ_MAX_CHUNK = 0x10000;
 const FLASH_READ_MIN_CHUNK = 0x1000;
 
 // Read a region of flash into a buffer with chunked progress reporting.
-async function readFlashToBuffer(offset, length, options = {}) {
+async function readFlashToBuffer(offset: number, length: number, options: ReadFlashOptions = {}) {
   if (!loader.value) {
     throw new Error('Device not connected.');
   }
