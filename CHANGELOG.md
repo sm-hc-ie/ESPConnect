@@ -4,6 +4,7 @@
 - Removed duplicate detectFlashSize().
 - Add ESP32-S0WD-OEM and ESP32-D0WD-OEM to chip descriptions by Jason2866 ([PR #55](https://github.com/thelastoutpostworkshop/ESPConnect/pull/55)).
 - Clear message in partitions that ESP8266 is not supported
+- Updated the LittleFS component so audio files show proper icon
 
 ## 1.0.8
 - Connection Tips asking to put the ESP32 into bootloader mode relies on WebSerial_ESPTool error message : "Couldn't sync to ESP. Try resetting."
