@@ -71,7 +71,6 @@ export interface EsptoolClient {
   loader: CompatibleLoader;
   transport: CompatibleTransport;
   connectAndHandshake: () => Promise<ConnectHandshakeResult>;
-  disconnect: () => Promise<void>;
   changeBaud: (baud: number) => Promise<void>;
   readPartitionTable: (offset?: number, length?: number) => Promise<any[]>;
   readFlashId: () => Promise<number | undefined>;
@@ -403,14 +402,6 @@ export function createEsptoolClient({
     transport.baudrate = loader.baudrate;
   }
 
-  async function disconnect() {
-    try {
-      await transport.disconnect();
-    } catch {
-      // swallow
-    }
-  }
-
   async function readPartitionTable(offset = 0x8000, length = 0x400) {
     const data = await loader.readFlash(offset, length);
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
@@ -518,7 +509,6 @@ export function createEsptoolClient({
     loader: loaderProxy,
     transport,
     connectAndHandshake,
-    disconnect,
     changeBaud,
     readPartitionTable,
     readFlashId,
