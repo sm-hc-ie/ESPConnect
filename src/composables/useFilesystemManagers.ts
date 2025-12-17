@@ -1,38 +1,49 @@
 import { reactive, ref } from 'vue';
 
+export interface FatFSEntry {
+  path: string;
+  size: number;
+}
+
+export interface LittleFSEntry {
+  path: string;
+  size: number;
+  type: "file" | "dir";
+}
+
 export type SpiffsClient = {
   list: () => any;
   read: (path: string) => any;
   write: (path: string, data: any) => any;
   remove: (path: string) => any;
   format: () => any;
-  toImage: () => any;
+  toImage: () => Uint8Array;
   getUsage?: () => { capacityBytes: number; usedBytes: number; freeBytes: number };
   canFit?: (path: string, size: number) => boolean;
 };
 
 export type LittlefsClient = {
-  list?: (path?: string) => Array<{ name?: string; size?: number; path?: string; type?: string }>;
+  list?: (path?: string) =>  LittleFSEntry[];
   readFile?: (path: string) => any;
-  read?: (path: string) => any;
+  read?: (path: string) => Uint8Array;
   writeFile?: (path: string, data: any) => any;
   addFile?: (path: string, data: any) => any;
   delete?: (path: string, options?: { recursive?: boolean }) => any;
   deleteFile?: (path: string) => any;
   mkdir?: (path: string) => any;
   format?: () => any;
-  toImage?: () => any;
+  toImage?: () => Uint8Array;
   getUsage?: () => { capacityBytes: number; usedBytes: number; freeBytes: number };
   canFit?: (path: string, size: number) => boolean;
 };
 
 export type FatfsClient = {
-  list?: () => Array<{ name?: string; size?: number; path?: string; type?: string }>;
+  list?: () => FatFSEntry[];
   writeFile?: (path: string, data: any) => any;
   deleteFile?: (path: string) => any;
   format?: () => any;
-  toImage?: () => any;
-  readFile?: (path: string) => any;
+  toImage?: () => Uint8Array;
+  readFile?: (path: string) => Uint8Array;
   read?: (path: string) => any;
 };
 
