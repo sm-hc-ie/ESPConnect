@@ -423,11 +423,9 @@ function createClient(Module, blockSize, blockCount) {
                 throw new LittleFSError("Failed to get image pointer", -1);
             }
 
-            try {
-                return new Uint8Array(Module.HEAPU8.buffer, ptr, size).slice();
-            } finally {
-                Module._free(ptr);
-            }
+            // Note: ptr points to internal ram_storage buffer, not allocated memory
+            // slice() already copies the data, so we must NOT free this pointer
+            return new Uint8Array(Module.HEAPU8.buffer, ptr, size).slice();
         },
 
         getDiskVersion() {
