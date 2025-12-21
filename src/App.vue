@@ -1126,8 +1126,8 @@ async function handleLittlefsBackup() {
     const stampedName = `${safeBase}_${formatBackupTimestamp()}.bin`;
     const cachedImage =
       littlefsState.lastReadImage &&
-      littlefsState.lastReadOffset === partition.offset &&
-      littlefsState.lastReadSize === partition.size
+        littlefsState.lastReadOffset === partition.offset &&
+        littlefsState.lastReadSize === partition.size
         ? littlefsState.lastReadImage
         : null;
     if (cachedImage) {
@@ -1893,8 +1893,8 @@ async function handleFatfsBackup() {
     const stampedName = `${safeBase}_${formatBackupTimestamp()}.bin`;
     const cachedImage =
       fatfsState.lastReadImage &&
-      fatfsState.lastReadOffset === partition.offset &&
-      fatfsState.lastReadSize === partition.size
+        fatfsState.lastReadOffset === partition.offset &&
+        fatfsState.lastReadSize === partition.size
         ? fatfsState.lastReadImage
         : null;
     if (cachedImage) {
@@ -2845,8 +2845,8 @@ async function handleSpiffsBackup() {
     const stampedName = `${safeBase}_${formatBackupTimestamp()}.bin`;
     const cachedImage =
       spiffsState.lastReadImage &&
-      spiffsState.lastReadOffset === partition.offset &&
-      spiffsState.lastReadSize === partition.size
+        spiffsState.lastReadOffset === partition.offset &&
+        spiffsState.lastReadSize === partition.size
         ? spiffsState.lastReadImage
         : null;
     if (cachedImage) {
@@ -3781,17 +3781,17 @@ const navigationItems = computed(() => [
   { title: 'Device Info', value: 'info', icon: 'mdi-information-outline', disabled: false },
   { title: 'Partitions', value: 'partitions', icon: 'mdi-table', disabled: !connected.value },
   {
+    title: 'Apps',
+    value: 'apps',
+    icon: 'mdi-application',
+    disabled: !connected.value || maintenanceNavigationLocked.value,
+  },
+  {
     title: 'NVS Inspector',
     value: 'nvs',
     icon: 'mdi-database-search',
     disabled:
       !connected.value || !nvsAvailable.value || maintenanceNavigationLocked.value,
-  },
-  {
-    title: 'Apps',
-    value: 'apps',
-    icon: 'mdi-application',
-    disabled: !connected.value || maintenanceNavigationLocked.value,
   },
   {
     title: 'SPIFFS Tools',
@@ -4597,7 +4597,7 @@ const partitionSegments = computed(() => {
   if (!connected.value) {
     return [];
   }
-  if(partitionTable.value.length == 0) {
+  if (partitionTable.value.length == 0) {
     return [];
   }
   const sortedPartitions = [...partitionTable.value].sort((a, b) => a.offset - b.offset);
@@ -5569,12 +5569,12 @@ async function connect() {
     }
 
     if (
-      typeof  metadata.blockVersionMajor === 'number' &&
-      !Number.isNaN( metadata.blockVersionMajor) &&
-      typeof  metadata.blockVersionMinor === 'number' &&
-      !Number.isNaN( metadata.blockVersionMinor)
+      typeof metadata.blockVersionMajor === 'number' &&
+      !Number.isNaN(metadata.blockVersionMajor) &&
+      typeof metadata.blockVersionMinor === 'number' &&
+      !Number.isNaN(metadata.blockVersionMinor)
     ) {
-      pushFact('eFuse Block Version', `v${ metadata.blockVersionMajor}.${ metadata.blockVersionMinor}`);
+      pushFact('eFuse Block Version', `v${metadata.blockVersionMajor}.${metadata.blockVersionMinor}`);
     }
 
     const docs = esp.chipName ? findChipDocs(esp.chipName) : undefined;
