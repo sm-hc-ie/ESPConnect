@@ -681,6 +681,7 @@ import { PWM_TABLE } from './utils/pwm-capabilities-table';
 import { parseNvsPartition, type NvsParseResult } from './lib/nvs/nvsParser';
 import type { AppPartitionMetadata } from './types/app-partitions';
 import type { DeviceDetails } from './types/device-details';
+import type { FilePreviewInfo } from './types/filesystem';
 
 let littlefsModulePromise = null;
 let fatfsModulePromise = null;
@@ -2535,7 +2536,7 @@ function updateFatfsUsage(partition = fatfsSelectedPartition.value) {
 }
 
 // Resolve how to preview a SPIFFS/LittleFS/FATFS file by extension.
-function resolveSpiffsViewInfo(name = '') {
+function resolveSpiffsViewInfo(name = ''): FilePreviewInfo | null {
   if (!name) return null;
   const dotIndex = name.lastIndexOf('.');
   if (dotIndex === -1) return null;
