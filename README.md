@@ -84,6 +84,8 @@ Feedback and test reports are very welcome.
 The tool cannot read partition tables or access SPIFFS/LittleFS, and advanced features available on ESP32 are not implemented for ESP8266.
 
 ## Running ESPConnect Locally
+>Prerequisite: Node.js **>= 22.12.0**.
+
 ESPConnect is a **pure in-browser web application** — no backend, no installation required, and all operations happen directly in your browser using Web Serial / WebUSB.
 
 ### 1. Run as a Desktop App (Electron)

@@ -4,6 +4,8 @@
 - Fixed LittleFS now use client getUsage for uploads
 - Refactor components to typescript
 - Move SPIFFS utilities from src/utils to src/lib
+- Build: Upgrade `@electron/fuses` to v2.0.0 (requires Node.js >= 22.12.0) and update Forge fuses integration for ESM compatibility
+- CI/Docker: Bump Node to 22.12.0+ for builds
 
 ## 1.1.0
 - New Feature : NVS Inspector
