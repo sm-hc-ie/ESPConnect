@@ -1,6 +1,6 @@
 import { ESPLoader } from 'tasmota-webserial-esptool';
 import type { Logger } from 'tasmota-webserial-esptool/dist/const.js';
-import type {} from '../types/web-serial';
+import type { } from '../types/web-serial';
 import type { ChipMetadata } from './chipMetadata/types';
 import {
   CHIP_FAMILY_ESP32S3,
@@ -72,6 +72,7 @@ export interface EsptoolClient {
   transport: CompatibleTransport;
   connectAndHandshake: () => Promise<ConnectHandshakeResult>;
   readChipMetadata: () => Promise<ChipMetadata>;
+  syncWithStub: () => Promise<void>;
 }
 
 export type CompatibleLoader = ESPLoader & {
@@ -89,13 +90,13 @@ export class CompatibleTransport {
   device: SerialPort;
   baudrate: number;
   tracing: boolean;
-  loader:CompatibleLoader;
+  loader: CompatibleLoader;
   private readonly isBusy: BusyGetter;
 
   constructor(
     device: SerialPort,
     tracing: boolean,
-    loader:CompatibleLoader,
+    loader: CompatibleLoader,
     isBusy: BusyGetter,
   ) {
     this.device = device;
@@ -296,8 +297,17 @@ export function createEsptoolClient({
   let client: EsptoolClient;
 
   async function syncWithStub(): Promise<void> {
-     await loader.hardReset();
-     await loader.sync();
+    try {
+      status('Finishing operation...');
+      await loader.reconnect();
+    } catch (e) {
+      // Fallback: your reconnect() already does hardReset(true) + sync + runStub(true)
+      // But reconnect() returns void and mutates internal state; we still want to ensure
+      // "loader" is the decorated stub afterwards.
+      console.error("Reconnect");
+    } finally {
+      setBusy(false);
+    }
   }
 
   // Open the serial port, talk to the ROM bootloader, load the stub flasher, optionally raise baud,
@@ -339,7 +349,7 @@ export function createEsptoolClient({
         logger.error('Cannot read security information');
       }
 
-      const result: ConnectHandshakeResult = { chipName, macAddress, securityFacts,flashSize:loader.flashSize };
+      const result: ConnectHandshakeResult = { chipName, macAddress, securityFacts, flashSize: loader.flashSize };
       return result;
     } finally {
       setBusy(false);
@@ -349,7 +359,7 @@ export function createEsptoolClient({
   async function readChipMetadata(): Promise<ChipMetadata> {
     setBusy(true);
     try {
-      const chipFamily =loader.getChipFamily();
+      const chipFamily = loader.getChipFamily();
 
       if (chipFamily === CHIP_FAMILY_ESP32S3) {
         return await readEsp32S3Metadata(loader);
@@ -400,7 +410,7 @@ export function createEsptoolClient({
         crystalFreq: undefined,
         macAddress: undefined,
         pkgVersion: undefined,
-        chipRevision:undefined,
+        chipRevision: undefined,
         majorVersion: undefined,
         minorVersion: undefined,
         flashVendor: undefined,
@@ -420,6 +430,7 @@ export function createEsptoolClient({
     transport,
     connectAndHandshake,
     readChipMetadata,
+    syncWithStub,
   };
 
   return client;
