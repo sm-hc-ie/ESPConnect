@@ -642,7 +642,7 @@ import { InMemorySpiffsClient } from './lib/spiffs/spiffsClient';
 import { useFatfsManager, useLittlefsManager, useSpiffsManager } from './composables/useFilesystemManagers';
 import { useDialogs } from './composables/useDialogs';
 import { readPartitionTable } from './utils/partitions';
-import { createEsptoolClient, requestSerialPort, type CompatibleLoader, type CompatibleTransport } from './services/esptoolClient';
+import { createEsptoolClient, requestSerialPort, type CompatibleLoader, type CompatibleTransport, type EsptoolClient } from './services/esptoolClient';
 import {
   SPIFFS_AUDIO_EXTENSIONS,
   SPIFFS_AUDIO_MIME_MAP,
@@ -3449,6 +3449,17 @@ async function writeFilesystemImage(partition: any, image: Uint8Array, options: 
     partition.offset,
     compress
   );
+  const finishingLabel = `Finalizing ${label}...`;
+  if (state) {
+    state.status = finishingLabel;
+  }
+  onProgress?.({
+    value: 100,
+    label: finishingLabel,
+    written: image.length,
+    total: image.length,
+  });
+  await esptoolClient.value?.syncWithStub();
 }
 
 const FILESYSTEM_LOAD_CANCELLED_MESSAGE = 'Filesystem load cancelled by user';
@@ -3865,6 +3876,7 @@ let confirmationResolver: ((confirmed: boolean) => void) | null = null;
 const currentPort = ref<SerialPort | null>(null);
 const transport = shallowRef<CompatibleTransport | null>(null);
 const loader = shallowRef<CompatibleLoader | null>(null);
+const esptoolClient = shallowRef<EsptoolClient | null>(null);
 const firmwareBuffer = ref<ArrayBuffer | null>(null);
 const firmwareName = ref('');
 const chipDetails = ref<DeviceDetails | null>(null);
@@ -5520,6 +5532,7 @@ async function disconnectTransport() {
     transport.value = null;
     currentPort.value = null;
     loader.value = null;
+    esptoolClient.value = null;
     connected.value = false;
     chipDetails.value = null;
     flashSizeBytes.value = null;
@@ -5618,9 +5631,11 @@ async function connect() {
         appendLog(msg, '[ESPConnect-Debug]');
       },
     });
-    const transportInstance = esptool.transport;
+    esptoolClient.value = esptool;
+    const client = esptoolClient.value;
+    const transportInstance = client.transport;
     transport.value = transportInstance;
-    loader.value = esptool.loader;
+    loader.value = client.loader;
     currentBaud.value = connectBaud_defaultROM;
     transportInstance.baudrate = connectBaud_defaultROM;
 
@@ -5634,7 +5649,7 @@ async function connect() {
 
     // Open the serial port, talk to the ROM bootloader, load the stub flasher
     connectDialog.message = 'Handshaking with ROM bootloader...';
-    const esp = await esptool.connectAndHandshake();
+    const esp = await client.connectAndHandshake();
     currentBaud.value = desiredBaud || connectBaud_defaultROM;
     transportInstance.baudrate = currentBaud.value;
     const previousSuspendState = suspendBaudWatcher;
@@ -5648,7 +5663,7 @@ async function connect() {
 
     lastFlashBaud.value = currentBaud.value;
 
-    const metadata = await esptool.readChipMetadata();
+    const metadata = await client.readChipMetadata();
 
     const descriptionRaw = metadata.description ?? esp.chipName;
     const featuresRaw = metadata.features;
@@ -5661,7 +5676,7 @@ async function connect() {
       '[ESPConnect-Debug]'
     );
 
-    const flashId = await esptool.loader.flashId();
+    const flashId = await client.loader.flashId();
     const id = Number.isFinite(flashId) ? flashId : null;
 
     const manufacturerCode = id !== null ? id & 0xff : null;
@@ -6027,10 +6042,10 @@ async function flashFirmware() {
       offsetNumber,
       true
     );
-
-    await loader.value.hardReset();
-    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
     flashProgressDialog.value = 100;
+    flashProgressDialog.label = 'Finalizing Flash...'
+    await esptoolClient.value?.syncWithStub();
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
     flashProgressDialog.label = `Flash complete in ${elapsed}s @ ${flashBaudLabel}. Finalizing...`;
     appendLog(`Flashing complete in ${elapsed}s. Device rebooted.`);
   } catch (error) {
