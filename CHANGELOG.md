@@ -3,6 +3,7 @@
 ## 1.1.2-preview
 ### Improvement
 - Add reconnect after flashing operations so the ROM has time to finalize
+- File systems restore now show the filename in the confirmation dialog
 - Append app version + timestamp to every log entry  
 
 ### Internal

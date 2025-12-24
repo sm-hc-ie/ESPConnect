@@ -1229,9 +1229,10 @@ async function handleLittlefsRestore(file: File | null) {
     littlefsState.status = `Restore file must be exactly ${formatBytes(partition.size) ?? `${partition.size} bytes`}.`;
     return;
   }
+  const fileLabel = file.name ? `"${file.name}"` : 'the selected image';
   const confirmed = await showConfirmation({
     title: 'Restore LittleFS Partition',
-    message: 'This will overwrite the entire LittleFS partition with the selected image. Continue?',
+    message: `This will overwrite the entire LittleFS partition with ${fileLabel}. Continue?`,
     confirmText: 'Restore',
     destructive: true,
   });
