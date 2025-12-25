@@ -74,6 +74,49 @@
     crystal: 'Crystal {crystal}',
     unknown: 'Unknown',
   },
+  about: {
+    title: 'About ESPConnect',
+    description: {
+      intro:
+        'ESPConnect is a browser-based toolkit for ESP32 devices. It brings common maintenance tasks together so you can connect, inspect and update your board without installing desktop utilities.',
+      details:
+        'The application talks to the device over the Web Serial API, then exposes high-level tools for firmware flashing, partition management, filesystem editing, backup/restore workflows, as well as a session log and serial monitor for troubleshooting. It is based on',
+      reference: 'WebSerial ESPTool',
+    },
+    filesystems: {
+      title: 'Filesystem Tools',
+      spiFFS: {
+        label: 'SPIFFS',
+        description: 'TypeScript emulator for staging changes locally before writing flash.',
+      },
+      littleFS: {
+        label: 'LittleFS',
+        description: 'Backed by the littlefs-wasm module for true storage parity.',
+      },
+      fatFS: {
+        label: 'FATFS',
+        description: 'New wasm-powered tooling for FAT partitions, mirroring your device layout.',
+      },
+      summary:
+        'Drag-and-drop uploads, preview/listen for common file types, diff summaries, and mandatory backups before saving keep the workflow safe.',
+    },
+    firmware: {
+      title: 'Firmware & Maintenance',
+      flash: 'Flash custom binaries with progress tracking, presets, and safety prompts.',
+      inspect: 'Inspect partition tables, OTA slots, device descriptors, and flash usage at a glance.',
+      monitor: 'Serial monitor with command shortcuts and session logging for troubleshooting.',
+    },
+    safety: {
+      title: 'Safety-first Workflow',
+      body:
+        'Every destructive action is gated behind confirmation prompts and recent backups. ESPConnect keeps staged changes in-memory until you explicitly write them to flash, making it easy to review modifications or revert by re-reading the partition.',
+    },
+    privacy: {
+      title: 'Privacy & Security',
+      body:
+        'ESPConnect runs fully in your browser -- there is no backend, account, or telemetry. Firmware files, backups, and diagnostics stay local and only move when you download them yourself. Always flash firmware from trusted sources.',
+    },
+  },
   language: {
     english: 'English',
     chinese: '简体中文',
