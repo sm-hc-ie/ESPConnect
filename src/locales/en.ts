@@ -497,6 +497,7 @@
   },
   language: {
     english: 'English',
+    french: 'Français',
     chinese: '简体中文',
     switchTo: 'Switch to {language}',
   },
