@@ -317,6 +317,7 @@
   partitions: {
     cardTitle: '分区',
     cardTitleWithSize: '分区 — {size}',
+    usageSummary: '分区占用 {size}',
     empty: {
       title: '暂无分区数据',
       subtitle: '连接 ESP32 以加载其分区表（ESP8266 不受支持）。',

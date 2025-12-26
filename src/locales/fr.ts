@@ -319,6 +319,7 @@
   partitions: {
     cardTitle: 'Partitions',
     cardTitleWithSize: 'Partitions — {size}',
+    usageSummary: 'Partitions occupent {size}',
     empty: {
       title: 'Aucune info de partionnnement',
       subtitle: 'Connctez un ESP32 afin d`en lire la table de partition (fonction non disponible pour la famille ESP8266).',

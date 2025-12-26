@@ -319,6 +319,7 @@
   partitions: {
     cardTitle: 'Partitions',
     cardTitleWithSize: 'Partitions — {size}',
+    usageSummary: 'Partitions use {size}',
     empty: {
       title: 'No partition data yet',
       subtitle: 'Connect to an ESP32 to load its partition table (ESP8266 not supported).',

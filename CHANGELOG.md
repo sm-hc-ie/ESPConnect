@@ -8,6 +8,7 @@ This replaces the previous DOM-based translation shim with a fully reactive, mai
  ([PR #85](https://github.com/thelastoutpostworkshop/ESPConnect/pull/85)).
 - Added reconnect after flashing operations so the ROM has time to finalize
 - In partitions tools, opening the ESP32Paritionbuilder application url, now passes the partition information
+- Partitions tab now reports total flash consumed (excludes bootloader and partition table)
 - File systems restore now show the filename in the confirmation dialog
 - Append app version + timestamp to every log entry  
 

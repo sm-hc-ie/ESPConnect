@@ -17,7 +17,10 @@
   <div v-else class="partition-view">
     <v-card variant="tonal" prepend-icon="mdi-table">
       <template v-slot:title>
-        <span class="font-weight-black">{{ partitionCardTitle }}</span>
+        <div class="partition-title">
+          <span class="font-weight-black">{{ partitionCardTitle }}</span>
+          <span class="partition-used">{{ t('partitions.usageSummary', { size: totalUsedDisplay }) }}</span>
+        </div>
       </template>
       <v-alert v-if="showUnusedAlert" type="warning" variant="tonal" class="unused-alert">
         <div>
@@ -166,6 +169,8 @@ const partitionCsvRows = computed(() =>
     row => row.size > 0 && !row.isUnused && !isReservedPartition(row),
   ),
 );
+const totalUsedBytes = computed(() => partitionCsvRows.value.reduce((total, row) => total + row.size, 0));
+const totalUsedDisplay = computed(() => formatBytes(totalUsedBytes.value) || `${totalUsedBytes.value} bytes`);
 const partitionBuilderUrl = computed(() => {
   const rows = partitionCsvRows.value;
   if (!rows.length) {
@@ -279,6 +284,21 @@ function logPartitionCsv(rows: FormattedPartitionRow[]) {
   console.info('partition CSV:\n' + buildPartitionCsv(rows));
 }
 
+function formatBytes(value: number | null | undefined): string | null {
+  if (value == null || value < 0) {
+    return null;
+  }
+  const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
+  let bytes = value;
+  let index = 0;
+  while (bytes >= 1024 && index < units.length - 1) {
+    bytes /= 1024;
+    index += 1;
+  }
+  const formatted = index === 0 ? `${bytes}` : bytes.toFixed(2);
+  return `${formatted} ${units[index]}`;
+}
+
 function isReservedPartition(row: FormattedPartitionRow): boolean {
   const label = row.label?.trim().toLowerCase();
   return label === 'bootloader' || label === 'partition table';
@@ -290,6 +310,18 @@ function isReservedPartition(row: FormattedPartitionRow): boolean {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.partition-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.partition-used {
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 56%, transparent);
 }
 
 .partitions-empty {
