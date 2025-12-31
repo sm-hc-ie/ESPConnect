@@ -4153,7 +4153,7 @@ const maintenanceNavigationLocked = computed(
 );
 const MONITOR_BUFFER_LIMIT = 20000;
 let monitorPendingText = '';
-let monitorFlushHandle: number | null = null;
+let monitorFlushHandle: ReturnType<typeof setTimeout> | number | null = null;
 let monitorFlushUsingAnimationFrame = false;
 const confirmationDialog = reactive({
   visible: false,
@@ -5506,7 +5506,7 @@ function cancelMonitorFlush() {
     return;
   }
   if (monitorFlushUsingAnimationFrame && typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
-    window.cancelAnimationFrame(monitorFlushHandle);
+    window.cancelAnimationFrame(monitorFlushHandle as number);
   } else {
     clearTimeout(monitorFlushHandle);
   }
