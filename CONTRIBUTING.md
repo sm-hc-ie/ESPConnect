@@ -19,6 +19,11 @@ npm run dev
 ## Code style
 - Run typecheck: `npm run typecheck`
 
+## Unit tests
+- Run all unit tests: `npm run test`
+- Run a focused fixture suite: `npm run test:fatfs`
+- Unit tests live under `src/` and `src/tests`; E2E tests live under `tests/e2e`.
+
 ## E2E tests
 - Install Playwright browsers (first time only): `npx playwright install`
 - Run E2E tests: `npm run test:e2e`
